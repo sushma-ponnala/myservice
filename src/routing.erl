@@ -6,7 +6,7 @@ routes() ->
 	[
 		{'_', [
 			{"/", toppage_handler, []},
-			{"/user", user_handler, []},
+			{"/register", register_handler, []},
 			{"/login", login_handler, []}
 		]}
 	].

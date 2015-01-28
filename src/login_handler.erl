@@ -44,16 +44,6 @@ handle_request(Req, State) ->
     {Method, Req2} = cowboy_req:method(Req),
 	process_request(Method, Req2, State).
 
-
-% process_request(<<"GET">>, Req, State) ->
-% 	% io:format("get process_request \n\n\n"),
-% 	% Body = <<"{\"rest\": \"Hello GET World!\"}">>,
-%     Result = emysql:execute(hello_pool, <<"select ID, USERNAME from lycusers">>),
-%     JSON = emysql:as_json(Result),
-%     Body = jsx:encode(JSON),
-%     % io:format(extended_start_script),
-% 	process_response("NORMAL", Body, Req, State, 200);
-
 process_request(<<"POST">>, Req, State) ->
 	% io:format("post process_request \n\n\n"),
     % Body = <<"{\"rest\": \"Hello POST World!\"}">>,
@@ -61,16 +51,6 @@ process_request(<<"POST">>, Req, State) ->
 
     {ok, PostVals, Req2} = cowboy_req:body_qs(Req),
     % TODO: Perform form validations
-
-% process_validation(data) ->
-
-% 	is_valid_UserName(data) orelse throw({error, validator_username_failed}),
-% 	is_valid_Pass(data) orelse throw({error, validator_password_failed}),
-% 	is_valid_Namespace(data) orelse throw({error, validator_namespace_failed}),
-	
-
-
-
 	UserName = binary_to_list(proplists:get_value(<<"userName">>, PostVals)),
 	Pass = binary_to_list(proplists:get_value(<<"pass">>, PostVals)),
 	Namespace = binary_to_list(proplists:get_value(<<"namespace">>, PostVals)),
@@ -87,16 +67,6 @@ process_request(<<"POST">>, Req, State) ->
     JSON = emysql:as_json(Result),
     Body = jsx:encode(JSON),
 	process_response("PRESET", Body, Req2, State, 200).
-
-% process_request(<<"PUT">>, Req, State) ->
-% 	% io:format("put process_request \n\n\n"),
-% 	Body = <<"{\"rest\": \"Hello PUT World!\"}">>,
-% 	process_response("PRESET", Body, Req, State, 200);
-
-% process_request(<<"DELETE">>, Req, State) ->
-% 	% io:format("delete process_request \n\n\n"),
-% 	Body = <<"{\"rest\": \"Hello DELETE World!\"}">>,
-% 	process_response("PRESET", Body, Req, State, 200).
 
 process_response("PRESET", Body, Req, State, StatusCode)->
 	Req2 = cowboy_req:set_resp_header(<<"StatusCode">>, StatusCode, Req),
