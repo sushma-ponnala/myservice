@@ -10,8 +10,7 @@
 		stdlib,
 		cowboy,
 		emysql,
-		jsx,
-		validaterl
+		jsx
 	]},
 	{mod, {rest_hello_world_app, []}},
 	{env, []}
