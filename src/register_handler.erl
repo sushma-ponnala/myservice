@@ -6,13 +6,12 @@
 -export(
   [ init/3, 
     content_types_accepted/2,
-    content_types_provided/2,
     terminate/3,
     allowed_methods/2,
     handle_request/2,
-    delete_resource/2,
     process_response/5,
     process_request/3
+    % process_requests/3
   ]).
 
 init(_Transport, _Req, []) -> {upgrade, protocol, cowboy_rest}.
@@ -21,7 +20,7 @@ terminate(_Reason, _Req, _State) -> ok.
 
 allowed_methods(Req, State) -> 
 	% io:format("allowed_methods\n\n\n"),
-	{[<<"GET">>, <<"POST">>, <<"PUT">>, <<"DELETE">>], Req, State}.
+	{[<<"POST">>], Req, State}.
 
 content_types_accepted(Req, State) -> 
 	% io:format("content_types_accepted\n\n\n"),
@@ -29,14 +28,6 @@ content_types_accepted(Req, State) ->
 		{<<"application/x-www-form-urlencoded">>, handle_request},
 		{<<"application/json">>, handle_request}
 		], Req, State}.
-
-content_types_provided(Req, State) -> 
-	% io:format("content_types_provided\n\n\n"),
-	{[{<<"application/json">>, handle_request}], Req, State}.
-
-delete_resource(Req, State) -> 
-	% io:format("delete\n\n\n"),
-	handle_request(Req, State).
 
 handle_request(Req, State) ->
 	% io:format("handle_request\n\n"),
@@ -76,35 +67,86 @@ process_request(<<"POST">>, Req, State) ->
 	Enabled = binary_to_list(proplists:get_value(<<"Enabled">>, PostVals)),
 
 	Result1 = emysql:execute(hello_pool, "INSERT INTO lycusers SET 
-				USERNAME = '"++ UserName ++"', 
-				PASS = '"++Pass++"', 
-				NAMESPACE = '"++Namespace++"',
-				LOGINALIAS = '"++LoginAlias++"',
-				FIRSTNAME = '"++FirstName++"',
-				LASTNAME = '"++LastName++"',
-				ADDRESS = '"++Address++"',
-				CITY = '"++City++"',
-				ZIP = '"++Zip++"',
-				STATE = '"++CountryState++"',
-				COUNTRY = '"++Country++"',
-				EMAIL = '"++Email++"',
-				ISD = '"++ISD++"',
-				PHONE = '"++Phone++"',
-				TELEGRAM = '"++Telegram++"',
-				GENDER = '"++Gender++"',
-				BIRTHDAY = '"++Birthday++"',
+				USERNAME 	 = '"++ UserName ++"', 
+				PASS 		 = '"++Pass++"', 
+				NAMESPACE 	 = '"++Namespace++"',
+				LOGINALIAS 	 = '"++LoginAlias++"',
+				FIRSTNAME 	 = '"++FirstName++"',
+				LASTNAME 	 = '"++LastName++"',
+				ADDRESS 	 = '"++Address++"',
+				CITY 		 = '"++City++"',
+				ZIP 		 = '"++Zip++"',
+				STATE 		 = '"++CountryState++"',
+				COUNTRY 	 = '"++Country++"',
+				EMAIL 	     = '"++Email++"',
+				ISD 	  	 = '"++ISD++"',
+				PHONE 		 = '"++Phone++"',
+				TELEGRAM 	 = '"++Telegram++"',
+				GENDER  	 = '"++Gender++"',
+				BIRTHDAY 	 = '"++Birthday++"',
 				CREATIONTIME = '"++CreationTime++"',
-				LASTLOGIN = '"++LastLogin++"',
-				REFIP = '"++RefIp++"',
-				ENABLED = '"++Enabled++"'
+				LASTLOGIN 	 = '"++LastLogin++"',
+				REFIP        = '"++RefIp++"',
+				ENABLED 	 = '"++Enabled++"'
 				"),
+	% username = binary_to_list(proplists:get_value(<<"username">>, PostVals)),
+	% pass = binary_to_list(proplists:get_value(<<"pass">>, PostVals)),
+	%  emysql:execute(hello_pool, "INSERT INTO XMPP SET 
+	% 			USERNAME 	 = '"++ username ++"', 
+	% 			PASS 		 = '"++ pass ++"'
+	% 			 "),
+
+
+
 	Id = integer_to_list(emysql:insert_id(Result1)),
 	% TODO: check is row inserted successfully
     Result2 = emysql:execute(hello_pool, "SELECT TELEGRAM, USERNAME FROM lycusers WHERE ID = '"++Id++"'"),
     % TODO: check if row exist
     JSON = emysql:as_json(Result2),
-    Body = jsx:encode(JSON),
+    % io:format("~p ~n ",[JSON]),
+    Add = jsx:encode(JSON), 
+    % io:format("~p ~n ",[Body]),
+    Body = "{\"status\": 0,
+    		 \"message\":'"++binary_to_list(Add)++"',
+    		 \"telegram\": true,
+    		 \"userData\": null,
+    		 \"groupContacts\": null,
+    		 \"userGroups\": null
+    			
+    		}",
 	process_response("PRESET", Body, Req2, State, 200).
+
+% process_requests(<<"POST">>, Req, State) ->
+% 	% io:format("post process_request \n\n\n"),
+%     % Body = <<"{\"rest\": \"Hello POST World!\"}">>,
+%     % {{Year,Month,Day},{Hour,Min,Sec}} = {date(),time()},
+
+%     {ok, PostVals, Req2} = cowboy_req:body_qs(Req),
+%     % TODO: Perform form validations
+% 	UserName = binary_to_list(proplists:get_value(<<"userName">>, PostVals)),
+% 	Pass = binary_to_list(proplists:get_value(<<"pass">>, PostVals)),
+	
+
+% 	Result5 = emysql:execute(hello_pool, "INSERT INTO XMPP SET 
+% 				USERNAME 	 = '"++ UserName ++"', 
+% 				PASS 		 = '"++Pass++"'
+% 				"),
+% 	% username = binary_to_list(proplists:get_value(<<"username">>, PostVals)),
+% 	% pass = binary_to_list(proplists:get_value(<<"pass">>, PostVals)),
+% 	%  emysql:execute(hello_pool, "INSERT INTO XMPP SET 
+% 	% 			USERNAME 	 = '"++ username ++"', 
+% 	% 			PASS 		 = '"++ pass ++"'
+% 	% 			 "),
+
+
+
+% 	RId = integer_to_list(emysql:insert_id(Result5)),
+% 	% TODO: check is row inserted successfully
+%     Result6 = emysql:execute(hello_pool, "SELECT USERNAME FROM XMPP WHERE ID = '"++RId++"'"),
+%     % TODO: check if row exist
+%     JSON = emysql:as_json(Result6),
+%     Body = jsx:encode(JSON),
+% 	process_response("PRESET", Body, Req2, State, 200).
 
 process_response("PRESET", Body, Req, State, StatusCode)->
 	Req2 = cowboy_req:set_resp_header(<<"StatusCode">>, StatusCode, Req),
