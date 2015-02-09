@@ -1,7 +1,7 @@
 %% Feel free to use, reuse and abuse the code in this file.
 
 %% @doc Hello world handler.
--module(login_handler).
+-module(updatephone_handler).
 
 -export(
   [ init/3, 
@@ -36,50 +36,20 @@ handle_request(Req, State) ->
 process_request(<<"POST">>, Req, State) ->
 	% io:format("post process_request \n\n\n"),
     % Body = <<"{\"rest\": \"Hello POST World!\"}">>,
-    % {{Year,Month,Day},{Hour,Min,Sec}} = {date(),time()},
 
     {ok, PostVals, Req2} = cowboy_req:body_qs(Req),
     % TODO: Perform form validations
 	UserName = binary_to_list(proplists:get_value(<<"userName">>, PostVals)),
-	Pass = binary_to_list(proplists:get_value(<<"pass">>, PostVals)),
-	Namespace = binary_to_list(proplists:get_value(<<"namespace">>, PostVals)),
+	Phone = binary_to_list(proplists:get_value(<<"phone">>, PostVals)),
 
-	
-	Result = emysql:execute(hello_pool, "SELECT USERNAME, NAMESPACE, LOGINALIAS, FIRSTNAME, LASTNAME, ADDRESS, CITY, ZIP, STATE, COUNTRY, EMAIL, PHONE, ISD, TELEGRAM, GENDER, BIRTHDAY FROM lycusers WHERE 
-				USERNAME  = '"++ UserName ++"' AND
-				PASS 	  = '"++Pass++"' AND
-				NAMESPACE = '"++Namespace++"'		
+	Result = emysql:execute(hello_pool, "UPDATE lycusers SET PHONE = '"++ Phone ++"' WHERE USERNAME = '"++ UserName ++"'		
 				"),
-
-	 % "userName": "kirankala",
-  %       "namespace": "lycos",
-  %       "loginAlias": null,
-  %       "firstName": "kiran",
-  %       "lastName": "kala",
-  %       "address": null,
-  %       "city": "",
-  %       "zip": "",
-  %       "state": "",
-  %       "country": "207",
-  %       "email": "",
-  %       "phone": "NULL",
-  %       "isd": null,
-  %       "telegram": false,
-  %       "gender": 0,
-  %       "dob": null
 	% Id = integer_to_list(emysql:insert_id(Result1)),
 	% % % TODO: check is row inserted successfully
  %    Result2 = emysql:execute(hello_pool, "SELECT FIRSTNAME, LASTNAME FROM lycusers WHERE ID = '"++Id++"'"),
     % TODO: check if row exist
     JSON = emysql:as_json(Result),
-    Add = jsx:encode(JSON),
-    Body = "{\"status\": 0,
-    		 \"message\":...,
-    		 \"telegram\": true,
-    		 \"userData\": '"++binary_to_list(Add)++"',
-    		 \"groupContacts\": null,
-    		 \"userGroups\": null
-    		}",
+    Body = jsx:encode(JSON),
 	process_response("PRESET", Body, Req2, State, 200).
 
 process_response("PRESET", Body, Req, State, StatusCode)->
