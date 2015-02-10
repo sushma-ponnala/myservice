@@ -1,6 +1,3 @@
-%% Feel free to use, reuse and abuse the code in this file.
-
-%% @doc Hello world handler.
 -module(register_handler).
 
 -export(
@@ -10,61 +7,55 @@
     allowed_methods/2,
     handle_request/2,
     process_response/5,
-    process_request/3
-    % process_requests/3
+    process_request/3,
+    process_request1/3
   ]).
 
 init(_Transport, _Req, []) -> {upgrade, protocol, cowboy_rest}.
 
 terminate(_Reason, _Req, _State) -> ok.
 
-allowed_methods(Req, State) -> 
-	% io:format("allowed_methods\n\n\n"),
+allowed_methods(Req, State) ->
 	{[<<"POST">>], Req, State}.
 
 content_types_accepted(Req, State) -> 
-	% io:format("content_types_accepted\n\n\n"),
 	{[  
 		{<<"application/x-www-form-urlencoded">>, handle_request},
 		{<<"application/json">>, handle_request}
 		], Req, State}.
 
 handle_request(Req, State) ->
-	% io:format("handle_request\n\n"),
     {Method, Req2} = cowboy_req:method(Req),
 	process_request(Method, Req2, State).
 
 process_request(<<"POST">>, Req, State) ->
-	% io:format("post process_request \n\n\n"),
-    % Body = <<"{\"rest\": \"Hello POST World!\"}">>,
     {{Year,Month,Day},{Hour,Min,Sec}} = {date(),time()},
 
     {ok, PostVals, Req2} = cowboy_req:body_qs(Req),
     % TODO: Perform form validations
-	UserName = binary_to_list(proplists:get_value(<<"userName">>, PostVals)),
-	Pass = binary_to_list(proplists:get_value(<<"pass">>, PostVals)),
-	Namespace = binary_to_list(proplists:get_value(<<"namespace">>, PostVals)),
-	LoginAlias = binary_to_list(proplists:get_value(<<"loginAlias">>, PostVals)),
-	FirstName = binary_to_list(proplists:get_value(<<"firstName">>, PostVals)),
-	LastName = binary_to_list(proplists:get_value(<<"lastName">>, PostVals)),
-	Address = binary_to_list(proplists:get_value(<<"address">>, PostVals)),
-	City = binary_to_list(proplists:get_value(<<"city">>, PostVals)),
-	Zip = binary_to_list(proplists:get_value(<<"zip">>, PostVals)),
+	UserName 	 = binary_to_list(proplists:get_value(<<"userName">>, PostVals)),
+	Pass 		 = binary_to_list(proplists:get_value(<<"pass">>, PostVals)),
+	Namespace    = binary_to_list(proplists:get_value(<<"namespace">>, PostVals)),
+	LoginAlias   = binary_to_list(proplists:get_value(<<"loginAlias">>, PostVals)),
+	FirstName 	 = binary_to_list(proplists:get_value(<<"firstName">>, PostVals)),
+	LastName 	 = binary_to_list(proplists:get_value(<<"lastName">>, PostVals)),
+	Address 	 = binary_to_list(proplists:get_value(<<"address">>, PostVals)),
+	City 		 = binary_to_list(proplists:get_value(<<"city">>, PostVals)),
+	Zip          = binary_to_list(proplists:get_value(<<"zip">>, PostVals)),
 	CountryState = binary_to_list(proplists:get_value(<<"state">>, PostVals)),
-	Country = binary_to_list(proplists:get_value(<<"country">>, PostVals)),
-	Email = binary_to_list(proplists:get_value(<<"email">>, PostVals)),
-	ISD = binary_to_list(proplists:get_value(<<"ISD">>, PostVals)),
-	Phone = binary_to_list(proplists:get_value(<<"phone">>, PostVals)),
-	Telegram = binary_to_list(proplists:get_value(<<"telegram">>, PostVals)),
-	Gender = binary_to_list(proplists:get_value(<<"gender">>, PostVals)),
-	Birthday = binary_to_list(proplists:get_value(<<"birthday">>, PostVals)),
+	Country 	 = binary_to_list(proplists:get_value(<<"country">>, PostVals)),
+	Email 		 = binary_to_list(proplists:get_value(<<"email">>, PostVals)),
+	ISD 		 = binary_to_list(proplists:get_value(<<"ISD">>, PostVals)),
+	Phone        = binary_to_list(proplists:get_value(<<"phone">>, PostVals)),
+	Telegram  	 = binary_to_list(proplists:get_value(<<"telegram">>, PostVals)),
+	Gender 		 = binary_to_list(proplists:get_value(<<"gender">>, PostVals)),
+	Birthday     = binary_to_list(proplists:get_value(<<"birthday">>, PostVals)),
 	CreationTime = integer_to_list(Year)++"-"++integer_to_list(Month)++"-"++integer_to_list(Day)++" "++
-				integer_to_list(Hour)++":"++integer_to_list(Min)++":"++integer_to_list(Sec),
-	LastLogin = 
-				% integer_to_list(Year)++"-"++integer_to_list(Month)++"-"++integer_to_list(Day)++" "++
-				% integer_to_list(Hour)++":"++integer_to_list(Min)++":"++integer_to_list(Sec),
-	RefIp = binary_to_list(proplists:get_value(<<"RefIp">>, PostVals)),
-	Enabled = binary_to_list(proplists:get_value(<<"Enabled">>, PostVals)),
+					integer_to_list(Hour)++":"++integer_to_list(Min)++":"++integer_to_list(Sec),
+	LastLogin 	 = integer_to_list(Year)++"-"++integer_to_list(Month)++"-"++integer_to_list(Day)++" "++
+					integer_to_list(Hour)++":"++integer_to_list(Min)++":"++integer_to_list(Sec),
+	RefIp 	 	 = binary_to_list(proplists:get_value(<<"RefIp">>, PostVals)),
+	Enabled      = binary_to_list(proplists:get_value(<<"Enabled">>, PostVals)),
 
 	Result1 = emysql:execute(hello_pool, "INSERT INTO lycusers SET 
 				USERNAME 	 = '"++ UserName ++"', 
@@ -89,64 +80,24 @@ process_request(<<"POST">>, Req, State) ->
 				REFIP        = '"++RefIp++"',
 				ENABLED 	 = '"++Enabled++"'
 				"),
-	% username = binary_to_list(proplists:get_value(<<"username">>, PostVals)),
-	% pass = binary_to_list(proplists:get_value(<<"pass">>, PostVals)),
-	%  emysql:execute(hello_pool, "INSERT INTO XMPP SET 
-	% 			USERNAME 	 = '"++ username ++"', 
-	% 			PASS 		 = '"++ pass ++"'
-	% 			 "),
-
-
-
+	
+	%  emysql:execute(hello_pool, "INSERT INTO XMPP SET USERNAME = '"++ username ++"', PASS = '"++ pass ++"'"),
 	Id = integer_to_list(emysql:insert_id(Result1)),
+	% io:format("~p ~n ",[Id]),
 	% TODO: check is row inserted successfully
-    Result2 = emysql:execute(hello_pool, "SELECT TELEGRAM, USERNAME FROM lycusers WHERE ID = '"++Id++"'"),
+    Result2 = emysql:execute(hello_pool, "SELECT USERNAME FROM lycusers WHERE ID = '"++Id++"'"),
     % TODO: check if row exist
     JSON = emysql:as_json(Result2),
     % io:format("~p ~n ",[JSON]),
     Add = jsx:encode(JSON), 
-    % io:format("~p ~n ",[Body]),
     Body = "{\"status\": 0,
     		 \"message\":'"++binary_to_list(Add)++"',
     		 \"telegram\": true,
     		 \"userData\": null,
     		 \"groupContacts\": null,
     		 \"userGroups\": null
-    			
     		}",
 	process_response("PRESET", Body, Req2, State, 200).
-
-% process_requests(<<"POST">>, Req, State) ->
-% 	% io:format("post process_request \n\n\n"),
-%     % Body = <<"{\"rest\": \"Hello POST World!\"}">>,
-%     % {{Year,Month,Day},{Hour,Min,Sec}} = {date(),time()},
-
-%     {ok, PostVals, Req2} = cowboy_req:body_qs(Req),
-%     % TODO: Perform form validations
-% 	UserName = binary_to_list(proplists:get_value(<<"userName">>, PostVals)),
-% 	Pass = binary_to_list(proplists:get_value(<<"pass">>, PostVals)),
-	
-
-% 	Result5 = emysql:execute(hello_pool, "INSERT INTO XMPP SET 
-% 				USERNAME 	 = '"++ UserName ++"', 
-% 				PASS 		 = '"++Pass++"'
-% 				"),
-% 	% username = binary_to_list(proplists:get_value(<<"username">>, PostVals)),
-% 	% pass = binary_to_list(proplists:get_value(<<"pass">>, PostVals)),
-% 	%  emysql:execute(hello_pool, "INSERT INTO XMPP SET 
-% 	% 			USERNAME 	 = '"++ username ++"', 
-% 	% 			PASS 		 = '"++ pass ++"'
-% 	% 			 "),
-
-
-
-% 	RId = integer_to_list(emysql:insert_id(Result5)),
-% 	% TODO: check is row inserted successfully
-%     Result6 = emysql:execute(hello_pool, "SELECT USERNAME FROM XMPP WHERE ID = '"++RId++"'"),
-%     % TODO: check if row exist
-%     JSON = emysql:as_json(Result6),
-%     Body = jsx:encode(JSON),
-% 	process_response("PRESET", Body, Req2, State, 200).
 
 process_response("PRESET", Body, Req, State, StatusCode)->
 	Req2 = cowboy_req:set_resp_header(<<"StatusCode">>, StatusCode, Req),
