@@ -3,6 +3,7 @@
 -export(
   [ init/3, 
     content_types_accepted/2,
+    content_types_provided/2,
     terminate/3,
     allowed_methods/2,
     handle_request/2,
@@ -16,6 +17,9 @@ terminate(_Reason, _Req, _State) -> ok.
 
 allowed_methods(Req, State) ->
 	{[<<"POST">>], Req, State}.
+
+content_types_provided(Req, State) -> 
+    {[{<<"application/json">>, handle_request}], Req, State}.
 
 content_types_accepted(Req, State) -> 
 	{[  
@@ -56,7 +60,7 @@ process_request(<<"POST">>, Req, State) ->
 	RefIp 	 	 = binary_to_list(proplists:get_value(<<"RefIp">>, PostVals)),
 	Enabled      = binary_to_list(proplists:get_value(<<"Enabled">>, PostVals)),
 
-	Result1 = emysql:execute(hello_pool, "INSERT INTO lycusers SET 
+	Result = emysql:execute(hello_pool, "INSERT INTO lycusers SET 
 				USERNAME 	 = '"++ UserName ++"', 
 				PASS 		 = '"++Pass++"', 
 				NAMESPACE 	 = '"++Namespace++"',
@@ -81,16 +85,23 @@ process_request(<<"POST">>, Req, State) ->
 				"),
 	
 	%  emysql:execute(hello_pool, "INSERT INTO XMPP SET USERNAME = '"++ username ++"', PASS = '"++ pass ++"'"),
-	Id = integer_to_list(emysql:insert_id(Result1)),
+	% Id = integer_to_list(emysql:insert_id(Result1)),
 	% io:format("~p ~n ",[Id]),
 	% TODO: check is row inserted successfully
-    Result2 = emysql:execute(hello_pool, "SELECT USERNAME FROM lycusers WHERE ID = '"++Id++"'"),
+    % Result2 = emysql:execute(hello_pool, "SELECT USERNAME FROM lycusers WHERE ID = '"++Id++"'"),
     % TODO: check if row exist
-    JSON = emysql:as_json(Result2),
+    % JSON = emysql:as_json(Result2),
     % io:format("~p ~n ",[JSON]),
-    Add = jsx:encode(JSON), 
+    % Add = jsx:encode(JSON), 
+    AffectedRows = emysql:affected_rows(Result),
+    Condition = if
+        AffectedRows>0 ->
+            <<"{\"message\": \"Phone number is updated\"}">>;
+        true -> % works as an 'else' branch
+            <<"{\"message\": \"Nothing to update\"}">>
+    end,
     Body = "{\"status\": 0,
-    		 \"message\":'"++binary_to_list(Add)++"',
+    		 \"message\":'"++Condition++"',
     		 \"telegram\": true,
     		 \"userData\": null,
     		 \"groupContacts\": null,

@@ -1,4 +1,7 @@
--module(login_handler).
+%% Feel free to use, reuse and abuse the code in this file.
+
+%% @doc Hello world handler.
+-module(search_contact_handler).
 
 -export(
   [ init/3, 
@@ -15,7 +18,7 @@ init(_Transport, _Req, []) -> {upgrade, protocol, cowboy_rest}.
 
 terminate(_Reason, _Req, _State) -> ok.
 
-allowed_methods(Req, State) ->
+allowed_methods(Req, State) -> 
 	{[<<"POST">>], Req, State}.
 
 content_types_provided(Req, State) -> 
@@ -33,18 +36,8 @@ handle_request(Req, State) ->
 
 process_request(<<"POST">>, Req, State) ->
     {ok, PostVals, Req2} = cowboy_req:body_qs(Req),
-    % TODO: Perform form validations
-	UserName  = binary_to_list(proplists:get_value(<<"userName">>, PostVals)),
-	Pass 	  = binary_to_list(proplists:get_value(<<"pass">>, PostVals)),
-	Namespace = binary_to_list(proplists:get_value(<<"namespace">>, PostVals)),
-
-	Result = emysql:execute(hello_pool, "SELECT USERNAME, NAMESPACE, LOGINALIAS, FIRSTNAME, LASTNAME, ADDRESS, CITY, ZIP, STATE, COUNTRY, EMAIL, PHONE, ISD, TELEGRAM, GENDER, BIRTHDAY FROM lycusers WHERE 
-				USERNAME  = '"++ UserName ++"' AND
-				PASS 	  = '"++Pass++"' AND
-				NAMESPACE = '"++Namespace++"'		
-				"),
-
-    % TODO: check if row exist
+	SearchStr = binary_to_list(proplists:get_value(<<"SearchStr">>, PostVals)),
+	Result = emysql:execute(hello_pool, "SELECT ID, USERNAME, FIRSTNAME, LASTNAME FROM `lycusers` WHERE `USERNAME` LIKE '"++ SearchStr ++"%' "),
     JSON = emysql:as_json(Result),
     Add = jsx:encode(JSON),
     Body = "{\"status\": 0,
