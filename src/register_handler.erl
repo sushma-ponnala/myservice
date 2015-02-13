@@ -7,8 +7,7 @@
     allowed_methods/2,
     handle_request/2,
     process_response/5,
-    process_request/3,
-    process_request1/3
+    process_request/3
   ]).
 
 init(_Transport, _Req, []) -> {upgrade, protocol, cowboy_rest}.
