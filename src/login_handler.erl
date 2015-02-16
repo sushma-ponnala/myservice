@@ -46,7 +46,7 @@ process_request(<<"POST">>, Req, State) ->
 
     % TODO: check if row exist
     JSON = emysql:as_json(Result),
-    Add = jsx:encode(JSON),
+    Add  = jsx:encode(JSON),
     Body = "{\"status\": 0,
     		 \"message\": null,
     		 \"telegram\": true,

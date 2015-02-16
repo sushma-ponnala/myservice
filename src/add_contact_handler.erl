@@ -1,7 +1,4 @@
-%% Feel free to use, reuse and abuse the code in this file.
-
-%% @doc Hello world handler.
--module(update_phone_handler).
+-module(add_contact_handler).
 
 -export(
   [ init/3, 
@@ -38,19 +35,14 @@ process_request(<<"POST">>, Req, State) ->
     {ok, PostVals, Req2} = cowboy_req:body_qs(Req),
     % TODO: Perform form validations
 	UserName = binary_to_list(proplists:get_value(<<"userName">>, PostVals)),
-	Phone = binary_to_list(proplists:get_value(<<"phone">>, PostVals)),
-
-	Result = emysql:execute(hello_pool, "UPDATE lycusers SET PHONE = '"++ Phone ++"' WHERE USERNAME = '"++ UserName ++"'		
-				"),
+	Result = emysql:execute(hello_pool, "INSERT INTO lycusers SET USERNAME = '"++ UserName ++"'	"),
     AffectedRows = emysql:affected_rows(Result),
-  
     Body = if
         AffectedRows>0 ->
-            <<"{\"message\": \"Phone number is updated\"}">>;
+            <<"{\"message\": \"contacts added\"}">>;
         true ->
-            <<"{\"message\": \"Nothing to update\"}">>
+            <<"{\"message\": \"something wrong\"}">>
     end,
-
 	process_response("PRESET", Body, Req2, State, 200).
 
 process_response("PRESET", Body, Req, State, StatusCode)->
