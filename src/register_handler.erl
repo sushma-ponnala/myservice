@@ -21,7 +21,7 @@ allowed_methods(Req, State) ->
 content_types_provided(Req, State) -> 
     {[{<<"application/json">>, handle_request}], Req, State}.
 
-content_types_accepted(Req, State) -> 
+content_types_accepted(Req, State) ->
 	{[  
 		{<<"application/x-www-form-urlencoded">>, handle_request},
 		{<<"application/json">>, handle_request}
@@ -33,8 +33,7 @@ handle_request(Req, State) ->
 
 process_request(<<"POST">>, Req, State) ->
     {{Year,Month,Day},{Hour,Min,Sec}} = {date(),time()},
-
-    {ok, PostVals, Req2} = cowboy_req:body_qs(Req),
+	{ok, PostVals, Req2} = cowboy_req:body_qs(Req),
     % TODO: Perform form validations
 	UserName 	 = binary_to_list(proplists:get_value(<<"userName">>, PostVals)),
 	Pass 		 = binary_to_list(proplists:get_value(<<"pass">>, PostVals)),
@@ -82,26 +81,22 @@ process_request(<<"POST">>, Req, State) ->
 				LASTLOGIN 	 = '"++LastLogin++"',
 				REFIP        = '"++RefIp++"',
 				ENABLED 	 = '"++Enabled++"'
-				"),
-	
-	%  emysql:execute(hello_pool, "INSERT INTO XMPP SET USERNAME = '"++ username ++"', PASS = '"++ pass ++"'"),
-	% Id = integer_to_list(emysql:insert_id(Result1)),
-	% io:format("~p ~n ",[Id]),
-	% TODO: check is row inserted successfully
-    % Result2 = emysql:execute(hello_pool, "SELECT USERNAME FROM lycusers WHERE ID = '"++Id++"'"),
-    % TODO: check if row exist
-    % JSON = emysql:as_json(Result2),
-    % io:format("~p ~n ",[JSON]),
-    % Add = jsx:encode(JSON), 
+				"), 
+
     AffectedRows = emysql:affected_rows(Result),
-    Condition = if
-        AffectedRows>0 ->
-            <<"{\"message\": \"Phone number is updated\"}">>;
-        true -> % works as an 'else' branch
-            <<"{\"message\": \"Nothing to update\"}">>
+    % Condition = if
+    %     AffectedRows>0 ->
+    %         <<"{\"Registration successful\"}">>;
+    %     true -> % works as an 'else' branch
+    %         <<"{\"Registration unsuccessful\"}">>
+    % end,
+	Condition = case AffectedRows>0 of
+    	true -> <<"{\"Registration successful\"}">>;
+		false -> <<"{\"Registration unsuccessful\"}">>
+		
     end,
-    Body = "{\"status\": 0,
-    		 \"message\":'"++Condition++"',
+	Body = "{\"status\": 0,
+    		 \"message\":'"++binary_to_list(Condition)++"',
     		 \"telegram\": true,
     		 \"userData\": null,
     		 \"groupContacts\": null,

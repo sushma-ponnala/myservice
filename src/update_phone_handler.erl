@@ -1,6 +1,3 @@
-%% Feel free to use, reuse and abuse the code in this file.
-
-%% @doc Hello world handler.
 -module(update_phone_handler).
 
 -export(
@@ -44,13 +41,17 @@ process_request(<<"POST">>, Req, State) ->
 				"),
     AffectedRows = emysql:affected_rows(Result),
   
-    Body = if
-        AffectedRows>0 ->
-            <<"{\"message\": \"Phone number is updated\"}">>;
-        true ->
-            <<"{\"message\": \"Nothing to update\"}">>
+    % Body = if
+    %     AffectedRows>0 ->
+    %         <<"{\"message\": \"Phone number is updated\"}">>;
+    %     true ->
+    %         <<"{\"message\": \"Nothing to update\"}">>
+    % end,
+Body = case AffectedRows>0 of
+        true -> <<"{\"message\": \"Phone number is updated\"}">>;
+        false -> <<"{\"message\": \"Nothing to update\"}">>
+        
     end,
-
 	process_response("PRESET", Body, Req2, State, 200).
 
 process_response("PRESET", Body, Req, State, StatusCode)->
