@@ -43,7 +43,6 @@ process_request(<<"POST">>, Req, State) ->
 				PASS 	  = '"++Pass++"' AND
 				NAMESPACE = '"++Namespace++"'		
 				"),
-
     % TODO: check if row exist
     JSON = emysql:as_json(Result),
     Add  = jsx:encode(JSON),

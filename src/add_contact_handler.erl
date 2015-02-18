@@ -34,16 +34,33 @@ handle_request(Req, State) ->
 process_request(<<"POST">>, Req, State) ->
     {ok, PostVals, Req2} = cowboy_req:body_qs(Req),
     % TODO: Perform form validations
-	UserName = binary_to_list(proplists:get_value(<<"userName">>, PostVals)),
-	Result = emysql:execute(hello_pool, "INSERT INTO lycusers SET USERNAME = '"++ UserName ++"'	"),
-    AffectedRows = emysql:affected_rows(Result),
-    Body = if
-        AffectedRows>0 ->
-            <<"{\"message\": \"contacts added\"}">>;
-        true ->
-            <<"{\"message\": \"something wrong\"}">>
+	UserName    = binary_to_list(proplists:get_value(<<"userName">>, PostVals)),
+    ContactName = binary_to_list(proplists:get_value(<<"contactName">>, PostVals)),
+    
+    User_id    = emysql:execute(hello_pool, "SELECT ID FROM lycusers WHERE USERNAME = '"++UserName++"' "), 
+    [[{<<"ID">>,User_Id}]] = emysql:as_proplist(User_id),
+
+    Contact_id = emysql:execute(hello_pool, "SELECT ID FROM lycusers WHERE USERNAME = '"++ContactName++"' "),
+    [[{<<"ID">>,Contact_Id}]] = emysql:as_proplist(Contact_id),
+
+    {result_packet,_,_,IdContent,_} =  emysql:execute(hello_pool, "SELECT ID FROM usercontacts WHERE USER_ID = '"++integer_to_list(User_Id)++"' AND CONTACT_ID = '"++integer_to_list(Contact_Id)++"' "),
+  
+    Check1 = case IdContent of
+        [[Userid]] ->
+            "{\"contact already exist '"++integer_to_list(Userid)++"'\"}";
+        [] ->
+            Result = emysql:execute(hello_pool, "INSERT INTO usercontacts (USER_ID, CONTACT_ID) values ('"++integer_to_list(User_Id)++"','"++integer_to_list(Contact_Id)++"')"),
+            Id = emysql:insert_id(Result),
+                case Id>0 of
+                    true ->
+                        <<"{\"message\": \"contacts added\"}">>;
+                    false ->
+                        <<"{\"message\": \"something wrong\"}">>
+                end
+        
     end,
-	process_response("PRESET", Body, Req2, State, 200).
+
+	process_response("PRESET", Check1, Req2, State, 200).
 
 process_response("PRESET", Body, Req, State, StatusCode)->
 	Req2 = cowboy_req:set_resp_header(<<"StatusCode">>, StatusCode, Req),

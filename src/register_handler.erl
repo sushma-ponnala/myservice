@@ -84,12 +84,6 @@ process_request(<<"POST">>, Req, State) ->
 				"), 
 
     AffectedRows = emysql:affected_rows(Result),
-    % Condition = if
-    %     AffectedRows>0 ->
-    %         <<"{\"Registration successful\"}">>;
-    %     true -> % works as an 'else' branch
-    %         <<"{\"Registration unsuccessful\"}">>
-    % end,
 	Condition = case AffectedRows>0 of
     	true -> <<"{\"Registration successful\"}">>;
 		false -> <<"{\"Registration unsuccessful\"}">>
