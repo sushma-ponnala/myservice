@@ -19,7 +19,7 @@ start_link() ->
 
     emysql:add_pool(hello_pool, [{size,1},
                  {user,"root"},
-                 {password,"abc123"},
+                 {password,""},
                  {database,"LycosMessenger"},
                  {encoding,utf8}]),
 	supervisor:start_link({local, ?MODULE}, ?MODULE, []).
