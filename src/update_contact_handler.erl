@@ -1,4 +1,4 @@
--module(add_contact_handler).
+-module(update_contact_handler).
 
 -export(
   [ init/3, 
@@ -34,9 +34,11 @@ handle_request(Req, State) ->
 process_request(<<"POST">>, Req, State) ->
     {ok, PostVals, Req2} = cowboy_req:body_qs(Req),
 
-	UserName    = binary_to_list(proplists:get_value(<<"userName">>, PostVals)),
+	UserName = binary_to_list(proplists:get_value(<<"userName">>, PostVals)),
+	UserStatus = binary_to_list(proplists:get_value(<<"userStatus">>, PostVals)),
     ContactName = binary_to_list(proplists:get_value(<<"contactName">>, PostVals)),
-    
+    ContactStatus = binary_to_list(proplists:get_value(<<"contactStatus">>, PostVals)),
+
     User_id    = emysql:execute(hello_pool, "SELECT ID FROM lycusers WHERE USERNAME = '"++UserName++"' "), 
     [[{<<"ID">>,User_Id}]] = emysql:as_proplist(User_id),
 
@@ -44,24 +46,24 @@ process_request(<<"POST">>, Req, State) ->
     [[{<<"ID">>,Contact_Id}]] = emysql:as_proplist(Contact_id),
 
     {result_packet,_,_,IdContent,_} =  emysql:execute(hello_pool, "SELECT ID FROM usercontacts WHERE USER_ID = '"++integer_to_list(User_Id)++"' AND CONTACT_ID = '"++integer_to_list(Contact_Id)++"' "),
-    % io:format("IdContent: ~p ~n", [IdContent]),
-    Body = case IdContent of
-        [_] ->
-            <<"{\"status\": \"1\",
-                \"message\": \"contact already exist\"}">>;
-        [] ->
-            Result = emysql:execute(hello_pool, "INSERT INTO usercontacts (USER_ID, CONTACT_ID) values ('"++integer_to_list(User_Id)++"','"++integer_to_list(Contact_Id)++"')"),
-            Id = emysql:insert_id(Result),
-                case Id>0 of
-                    true ->
-                        <<"{\"status\": \"0\",
-                            \"message\": \"contacts added\"}">>;
-                    false ->
-                        <<"{\"message\": \"something wrong\"}">>
-                end
         
+    Body = case IdContent of
+        [] ->
+            <<"{\"status\": \"1\",
+                \"message\": \"UserName or ContactName doesn't exist\"}">>;
+        
+        [[Userid]] ->
+            Result = emysql:execute(hello_pool, "UPDATE usercontacts SET USER_ID = '"++ integer_to_list(User_Id) ++"', SELF_STATUS = '"++ UserStatus ++"', CONTACT_ID = '"++ integer_to_list(Contact_Id) ++"', CONTACT_STATUS = '"++ ContactStatus ++"' WHERE ID = '"++ integer_to_list(Userid) ++"' "),
+            AffectedRows = emysql:affected_rows(Result),
+            case AffectedRows>0 of
+                true ->
+                    <<"{\"status\": \"0\",
+                        \"message\": \"Updated Successfuly\"}">>;
+                false ->
+                    <<"{\"status\": \"1\",
+                        \"message\": \"Nothing to update\"}">>
+            end
     end,
-
 	process_response("PRESET", Body, Req2, State, 200).
 
 process_response("PRESET", Body, Req, State, StatusCode)->
