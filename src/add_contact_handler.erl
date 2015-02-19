@@ -47,13 +47,15 @@ process_request(<<"POST">>, Req, State) ->
     % io:format("IdContent: ~p ~n", [IdContent]),
     Body = case IdContent of
         [_] ->
-            <<"{\"message\": \"contact already exist\"}">>;
+            <<"{\"status\": \"1\",
+                \"message\": \"contact already exist\"}">>;
         [] ->
             Result = emysql:execute(hello_pool, "INSERT INTO usercontacts (USER_ID, CONTACT_ID) values ('"++integer_to_list(User_Id)++"','"++integer_to_list(Contact_Id)++"')"),
             Id = emysql:insert_id(Result),
                 case Id>0 of
                     true ->
-                        <<"{\"message\": \"contacts added\"}">>;
+                        <<"{\"status\": \"0\",
+                            \"message\": \"contacts added\"}">>;
                     false ->
                         <<"{\"message\": \"something wrong\"}">>
                 end

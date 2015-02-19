@@ -49,16 +49,19 @@ process_request(<<"POST">>, Req, State) ->
         
     Body = case IdContent of
         [] ->
-            <<"{\"message\": \"something wrong!! Please check\"}">>;
+            <<"{\"status\": \"1\",
+                \"message\": \"UserName or ContactName doesn't exist\"}">>;
         
         [[Userid]] ->
             Result = emysql:execute(hello_pool, "UPDATE usercontacts SET USER_ID = '"++ integer_to_list(User_Id) ++"', SELF_STATUS = '"++ UserStatus ++"', CONTACT_ID = '"++ integer_to_list(Contact_Id) ++"', CONTACT_STATUS = '"++ ContactStatus ++"' WHERE ID = '"++ integer_to_list(Userid) ++"' "),
             AffectedRows = emysql:affected_rows(Result),
             case AffectedRows>0 of
                 true ->
-                    <<"{\"message\": \"Updated Successfuly\"}">>;
+                    <<"{\"status\": \"0\",
+                        \"message\": \"Updated Successfuly\"}">>;
                 false ->
-                    <<"{\"message\": \"Nothing to update\"}">>
+                    <<"{\"status\": \"1\",
+                        \"message\": \"Nothing to update\"}">>
             end
     end,
 	process_response("PRESET", Body, Req2, State, 200).
