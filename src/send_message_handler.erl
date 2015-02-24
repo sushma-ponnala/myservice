@@ -32,38 +32,30 @@ handle_request(Req, State) ->
 	process_request(Method, Req2, State).
 
 process_request(<<"POST">>, Req, State) ->
-    % {{Year,Month,Day},{Hour,Min,Sec}} = {date(),time()},
+    {Year,Month,Day} = date(),
+    {Hour,Min,Sec}	 = time(),
 	{ok, PostVals, Req2} = cowboy_req:body_qs(Req),
-    % TODO: Getting form values
+    % Getting form values
 	Sender 	 			 = binary_to_list(proplists:get_value(<<"sender">>, PostVals)),
 	Receiver 		 	 = binary_to_list(proplists:get_value(<<"receiver">>, PostVals)),
 	MsgType    			 = binary_to_list(proplists:get_value(<<"msgType">>, PostVals)),
 	Msg   				 = binary_to_list(proplists:get_value(<<"msg">>, PostVals)),
 	LocalPathSender 	 = binary_to_list(proplists:get_value(<<"localPathSender">>, PostVals)),
 	LocalPathReceiver 	 = binary_to_list(proplists:get_value(<<"localPathReceiver">>, PostVals)),
-	MsgDate 	 		 = binary_to_list(proplists:get_value(<<"msgDate">>, PostVals)),
-	MsgTime 		 	 = binary_to_list(proplists:get_value(<<"msgTime">>, PostVals)),
+	% MsgDate 	 		 = binary_to_list(proplists:get_value(<<"msgDate">>, PostVals)),
+	MsgDate				 = integer_to_list(Year)++"-"++integer_to_list(Month)++"-"++integer_to_list(Day),
+	% MsgTime 		 	 = binary_to_list(proplists:get_value(<<"msgTime">>, PostVals)),
+	MsgTime				 = integer_to_list(Hour)++":"++integer_to_list(Min)++":"++integer_to_list(Sec),
 	MsgTz          	 	 = binary_to_list(proplists:get_value(<<"msgTz">>, PostVals)),
 	MsgStatus 			 = binary_to_list(proplists:get_value(<<"msgStatus">>, PostVals)),
 	
 	% Getting Sender ID
 	Sender_id = emysql:execute(hello_pool, "SELECT ID FROM lycusers WHERE USERNAME = '"++Sender++"' "), 
-    [[{<<"ID">>,SenderID}]] = emysql:as_proplist(Sender_id),
-    % io:format("sender_Id-->:~p ~n", [SenderID]),    
+    [[{<<"ID">>,SenderID}]] = emysql:as_proplist(Sender_id),  
     
     % Getting Receiver ID
 	Receiver_id = emysql:execute(hello_pool, "SELECT ID FROM lycusers WHERE USERNAME = '"++Receiver++"' "), 
     [[{<<"ID">>,ReceiverID}]] = emysql:as_proplist(Receiver_id),
-    % io:format("receiver_Id-->:~p ~n", [ReceiverID]),
-
- %    SAffectedRows = emysql:affected_rows(Sender_id),
- %    RAffectedRows = emysql:affected_rows(Receiver_id),
-    
-	% Condition = case SAffectedRows and RAffectedRows > 0 of
- %    	true -> <<"{\"Send message successful\"}">>;
-	% 	false -> <<"{\"Send message unsuccessful\"}">>
-		
- %    end,
 
     Result = emysql:execute(hello_pool, "INSERT INTO lycmessages SET 
 		SENDER_ID 			 = '"++integer_to_list(SenderID)++"',
@@ -79,22 +71,16 @@ process_request(<<"POST">>, Req, State) ->
 		),	 
 
     AffectedRows = emysql:affected_rows(Result),
-    % Condition = if
-    %     AffectedRows>0 ->
-    %         <<"{\"Registration successful\"}">>;
-    %     true -> % works as an 'else' branch
-    %         <<"{\"Registration unsuccessful\"}">>
-    % end,
-	Condition = case AffectedRows>0 of
+	Body = case AffectedRows>0 of
     	true ->    	
-    	 <<"{\"Message send successful\"}">>;
+    	 <<"{\"status\": 0,
+    	 	 \"message\": \"Message sending successful\"}">>;
 		false -> 
-    	 <<"{\"Message send unsuccessful\"}">>
-		
+    	 <<"{\"status\": 1,
+			 \"message\": \"Message sending failed\"}">>
+			 		
     end,
-	Body = "{\"status\": 0,
-    		 \"message\":'"++binary_to_list(Condition)++"',		 
-    		}",
+
 process_response("PRESET", Body, Req2, State, 200).
 
 process_response("PRESET", Body, Req, State, StatusCode)->

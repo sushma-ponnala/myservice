@@ -89,12 +89,33 @@ process_request(<<"POST">>, Req, State) ->
 		false -> <<"{\"Registration unsuccessful\"}">>
 		
     end,
+
+        % // userdata //
+    UserData = emysql:execute(hello_pool, "SELECT USERNAME, NAMESPACE, LOGINALIAS, FIRSTNAME, LASTNAME, ADDRESS, CITY, ZIP, STATE, COUNTRY, EMAIL, PHONE, ISD, TELEGRAM, GENDER, BIRTHDAY FROM lycusers WHERE 
+                USERNAME  = '"++ UserName ++"' AND
+                PASS      = '"++Pass++"' AND
+                NAMESPACE = '"++Namespace++"'       
+                "),
+    UserData_Json = emysql:as_json(UserData),
+    UserData_Jsx  = jsx:encode(UserData_Json),
+
+    %  // userGroups //
+    UserGroups = emysql:execute(hello_pool, "SELECT GROUPNAME FROM lycbuddygroups WHERE ID IN (SELECT DISTINCT GROUP_ID FROM lycusers_buddygroups WHERE USER_NAME = '"++UserName++"') "),
+    UserGroups_Json = emysql:as_json(UserGroups),
+    UserGroups_Jsx  = jsx:encode(UserGroups_Json),
+
+    % // groupcontacts //
+
+    GroupContacts = emysql:execute(hello_pool,"SELECT USER_NAME FROM lycusers_buddygroups WHERE GROUP_ID IN (SELECT DISTINCT GROUP_ID FROM lycusers_buddygroups WHERE USER_NAME = '"++UserName++"')"),
+    GroupContacts_Json = emysql:as_json(GroupContacts),
+    GroupContacts_Jsx  = jsx:encode(GroupContacts_Json),
+    
 	Body = "{\"status\": 0,
     		 \"message\":'"++binary_to_list(Condition)++"',
     		 \"telegram\": true,
-    		 \"userData\": null,
-    		 \"groupContacts\": null,
-    		 \"userGroups\": null
+    		 \"userData\": '"++ binary_to_list(UserData_Jsx) ++"',
+             \"groupContacts\": '"++ binary_to_list(GroupContacts_Jsx) ++"',
+             \"userGroups\": '"++ binary_to_list(UserGroups_Jsx) ++"'
     		}",
 	process_response("PRESET", Body, Req2, State, 200).
 
