@@ -59,7 +59,6 @@ process_request(<<"POST">>, Req, State) ->
                     false ->
                         <<"{\"message\": \"something wrong\"}">>
                 end
-        
     end,
 
 	process_response("PRESET", Body, Req2, State, 200).

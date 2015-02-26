@@ -47,7 +47,7 @@ process_request(<<"POST">>, Req, State) ->
     Contacts_Json = emysql:as_json(Contacts),
     Contacts_Jsx  = jsx:encode(Contacts_Json),
 
-    % // fetching userdata //
+    % // userdata //
     UserData = emysql:execute(hello_pool, "SELECT USERNAME, NAMESPACE, LOGINALIAS, FIRSTNAME, LASTNAME, ADDRESS, CITY, ZIP, STATE, COUNTRY, EMAIL, PHONE, ISD, TELEGRAM, GENDER, BIRTHDAY FROM lycusers WHERE 
                 USERNAME  = '"++ UserName ++"' AND
                 PASS      = '"++Pass++"' AND

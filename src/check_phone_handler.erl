@@ -33,20 +33,22 @@ handle_request(Req, State) ->
 
 process_request(<<"POST">>, Req, State) ->
     {ok, PostVals, Req2} = cowboy_req:body_qs(Req),
-    % TODO: Perform form validations
-    % UserName = binary_to_list(proplists:get_value(<<"userName">>, PostVals)),
+    UserName = binary_to_list(proplists:get_value(<<"userName">>, PostVals)),
     Phone    = binary_to_list(proplists:get_value(<<"phone">>, PostVals)),
-    % Result   = emysql:execute(hello_pool, "SELECT PHONE, USERNAME FROM lycusers WHERE PHONE = '"++Phone++"' and USERNAME = '"++UserName++"'   
-    Result   = emysql:execute(hello_pool, "SELECT PHONE FROM lycusers WHERE PHONE = '"++Phone++"' "),
-    JSON   = emysql:as_json(Result),
-    Output = jsx:encode(JSON),
-    Condition = case Output>0 of
-        true -> <<"{\"Phone number is available\"}">>;
-        false -> <<"{\"Phone number is unavailable\"}">>
+    {result_packet,_,_,ID,_} = emysql:execute(hello_pool, "SELECT ID FROM lycusers WHERE USERNAME = '"++UserName++"' "), 
+    Body = case ID of
+        [] ->
+            <<"{\"status\": 1,
+             \"message\": \"Username doesn't exist\"}">>;
+        [_] ->
+            {result_packet,_,_,[[Count]],_} = emysql:execute(hello_pool, "SELECT count(*) FROM lycusers WHERE PHONE = '"++Phone++"' "),
+            case Count of
+                0 -> <<"{\"status\": 0,
+                     \"message\": \"Mobile number is unique\"}">>;
+                1-> <<"{\"status\": 1,
+                    \"message\": \"Mobile number is already exist\"}">>
+            end
     end,
-    Body   = "{\"status\": 0,
-               \"message\":'"++binary_to_list(Condition)++"'
-              }",
     process_response("PRESET", Body, Req2, State, 200).
 
 process_response("PRESET", Body, Req, State, StatusCode)->

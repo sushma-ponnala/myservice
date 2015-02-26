@@ -41,13 +41,7 @@ process_request(<<"POST">>, Req, State) ->
 				"),
     AffectedRows = emysql:affected_rows(Result),
   
-    % Body = if
-    %     AffectedRows>0 ->
-    %         <<"{\"message\": \"Phone number is updated\"}">>;
-    %     true ->
-    %         <<"{\"message\": \"Nothing to update\"}">>
-    % end,
-Body = case AffectedRows>0 of
+    Body = case AffectedRows>0 of
         true -> <<"{\"message\": \"Phone number is updated\"}">>;
         false -> <<"{\"message\": \"Nothing to update\"}">>
         
