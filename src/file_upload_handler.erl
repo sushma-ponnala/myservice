@@ -13,5 +13,5 @@ init(Req, Opts) ->
     FilePath = lists:concat([Path, Filename2]),
     file:write_file(FilePath, Data),
 
-    Req4 = cowboy_req:reply(200, [{<<"content-type">>, <<"text/plain">>}], "File saved to "++FilePath, Req3),
+    Req4 = cowboy_req:reply(200, [{<<"content-type">>, <<"multipart/form-data">>}], "File saved to "++FilePath, Req3),
     {ok, Req4, Opts}.
